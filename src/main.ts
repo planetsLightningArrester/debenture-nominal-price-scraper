@@ -7,7 +7,7 @@ import { DateTime } from 'luxon'
 /** Spreadsheet with the data to update */
 const spreadsheetId = atob(atob('TVZkamQyTmpNREJmZVhnMFZVSmtUV2hWY0dabldVeHNkbEU1WHpOU05VUmpiMVJTVGxnNU1sRnBlbEU'))
 /** Spreadsheet format starting row */
-const spreadsheetStartRow = 1
+const spreadsheetStartRow = 11
 /** Spreadsheet format code's column */
 const spreadsheetCodeColumn = 0
 /** Spreadsheet format PU PAR's column */
