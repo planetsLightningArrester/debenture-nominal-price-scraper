@@ -1,0 +1,31 @@
+name: 🏊 Scrap data
+concurrency:
+  cancel-in-progress: false
+  group: scrap-data
+
+defaults:
+  run:
+    shell: bash
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '* * * * 1,2,3,4,5'
+jobs:
+  daily_check:
+    name: "🏊 Scrap data"
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🛠️ NodeJS setup
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 🔧 Install dependencies
+        run: npm ci
+
+      - name: 🔄 Run scraper
+        run: |
+          npm run start -- -g '${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON_KEY }}'

@@ -1,0 +1,17 @@
+{
+  "[json]": {
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": true
+  },
+  "eslint.options": {
+    "overrideConfigFile": "eslint.config.mjs"
+  },
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+  },
+  "cSpell.words": [
+    "gaxios",
+    "luxon",
+    "printaeu"
+  ]
+}
