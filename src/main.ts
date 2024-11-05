@@ -81,9 +81,9 @@ async function main(): Promise<void> {
                 range: {
                   sheetId: 0,
                   startRowIndex: spreadsheetStartRow,
-                  endRowIndex: assets.length + 1,
+                  endRowIndex: spreadsheetStartRow + assets.length + 1,
                   startColumnIndex: spreadsheetCodeColumn,
-                  endColumnIndex: 3
+                  endColumnIndex: spreadsheetCodeColumn + 3
                 },
                 rows: assets.map(a => {
                   return {
