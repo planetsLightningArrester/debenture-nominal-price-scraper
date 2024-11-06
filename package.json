@@ -1,7 +1,7 @@
 {
   "name": "debenture-nominal-price-scraper",
   "displayName": "Debenture nominal price scraper",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "",
   "main": "out/main.js",
   "scripts": {
@@ -20,7 +20,8 @@
     "dom-parser": "^1.1.5",
     "googleapis": "^144.0.0",
     "luxon": "^3.5.0",
-    "printaeu": "^0.1.12"
+    "printaeu": "^0.1.12",
+    "puppeteer": "^23.7.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.5.0",
