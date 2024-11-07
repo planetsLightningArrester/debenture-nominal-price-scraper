@@ -16,7 +16,7 @@ export async function updateAssets(assets: Asset[]): Promise<[Asset[], boolean, 
   if (gaxiosErrors.length === 0) {
     return [assets, gaxiosUpdatedData, gaxiosErrors]
   } else {
-    const parsedAssets = assets.filter(a => gaxiosErrors.find(e => e.assetCode !== a.code))
+    const parsedAssets = assets.filter(a => typeof gaxiosErrors.find(e => e.assetCode === a.code) === 'undefined')
     const toParseAssets = assets.filter(a => gaxiosErrors.find(e => e.assetCode === a.code))
     const [puppeteerUpdatedData, errors] = await puppeteerScraper(toParseAssets)
     return [[...parsedAssets, ...toParseAssets], gaxiosUpdatedData || puppeteerUpdatedData, errors]
