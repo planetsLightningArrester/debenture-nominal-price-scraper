@@ -21,7 +21,9 @@
     "googleapis": "^144.0.0",
     "luxon": "^3.5.0",
     "printaeu": "^0.1.12",
-    "puppeteer": "^23.7.0"
+    "puppeteer": "^23.7.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.5.0",

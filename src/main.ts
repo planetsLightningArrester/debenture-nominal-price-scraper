@@ -30,7 +30,7 @@ async function main(): Promise<void> {
   })
 
   info.log('📝 Getting Spreadsheet data')
-  const assets: Asset[] = []
+  let assets: Asset[] = []
   const sheets = google.sheets({ version: 'v4', auth })
 
   try {
@@ -66,7 +66,8 @@ async function main(): Promise<void> {
 
   info.log('🏊 Scraping for market and asset value')
 
-  const [updated, errors] = await updateAssets(assets)
+  const [_assets, updated, errors] = await updateAssets(assets)
+  assets = _assets
 
   if (updated) {
     info.log('📝 Updating the Spreadsheet')
