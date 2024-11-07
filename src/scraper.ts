@@ -52,12 +52,12 @@ async function puppeteerScraper(assets: Asset[]): Promise<[boolean, ScrapError[]
       await page.setViewport({ width: 1080, height: 1024 })
       info.log(`💰 Scraping for the nominal price of '${requiredAsset.code}'`)
       try {
-        await page.waitForSelector('.lower-card-item-value')
+        await page.waitForSelector('.lower-card-item-value', { timeout: 10000 })
       } catch (error) {
         await page.waitForSelector('#maskNotFound', { timeout: 1000 })
         try {
           await page.goto(`${certificateOfReceivableBaseUrl}/${requiredAsset.code}/caracteristicas`)
-          await page.waitForSelector('.lower-card-item-value')
+          await page.waitForSelector('.lower-card-item-value', { timeout: 10000 })
         } catch (error) {
           const message = `Couldn't get the results for the asset '${requiredAsset.code}'. Make sure its code is correct`
           err.log(message)
