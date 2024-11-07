@@ -28,4 +28,4 @@ jobs:
 
       - name: 🔄 Run scraper
         run: |
-          npm run start -- -g '${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON_KEY }}'
+          xvfb-run -s "-screen 0, 1024x768x24" npm run start -- -g '${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON_KEY }}'
