@@ -3,9 +3,6 @@ concurrency:
   cancel-in-progress: false
   group: scrap-data
 
-defaults:
-  run:
-    shell: bash
 on:
   workflow_dispatch:
   schedule:
