@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/strict-boolean-expressions */
 import { parseFromString } from 'dom-parser'
 import { request } from 'gaxios'
 import { DateTime } from 'luxon'
-import puppeteer from 'puppeteer'
+import puppeteer, { type PuppeteerExtraPlugin } from 'puppeteer-extra'
+import StealthPlugin from 'puppeteer-extra-plugin-stealth'
 import { type Asset, err, info, ScrapError, warn } from './globals'
 
 /**
@@ -9,11 +11,16 @@ import { type Asset, err, info, ScrapError, warn } from './globals'
  * @param assets the assets to update
  * @returns whether any assets was updated
  */
-export async function updateAssets(assets: Asset[]): Promise<[boolean, ScrapError[]]> {
-  const [dataUpdated, errors] = await gaxiosScraper(assets)
-  if (errors.length > 0) {
-    return await puppeteerScraper(assets.filter(a => errors.find(e => e.assetCode === a.code)))
-  } else return [dataUpdated, errors]
+export async function updateAssets(assets: Asset[]): Promise<[Asset[], boolean, ScrapError[]]> {
+  const [gaxiosUpdatedData, gaxiosErrors] = await gaxiosScraper(assets)
+  if (gaxiosErrors.length === 0) {
+    return [assets, gaxiosUpdatedData, gaxiosErrors]
+  } else {
+    const parsedAssets = assets.filter(a => gaxiosErrors.find(e => e.assetCode !== a.code))
+    const toParseAssets = assets.filter(a => gaxiosErrors.find(e => e.assetCode === a.code))
+    const [puppeteerUpdatedData, errors] = await puppeteerScraper(toParseAssets)
+    return [[...parsedAssets, ...toParseAssets], gaxiosUpdatedData || puppeteerUpdatedData, errors]
+  }
 }
 
 /**
@@ -27,8 +34,9 @@ async function puppeteerScraper(assets: Asset[]): Promise<[boolean, ScrapError[]
     warn.log('All assets are already up-to-date')
     return [false, []]
   }
+  puppeteer.use(StealthPlugin() as PuppeteerExtraPlugin)
 
-  const browser = await puppeteer.launch()
+  const browser = await puppeteer.launch({ headless: false })
   const page = await browser.newPage()
 
   const debenturesBaseUrl = atob(atob('YUhSMGNITTZMeTlrWVhSaExtRnVZbWx0WVM1amIyMHVZbkl2WkdWaVpXNTBkWEpsY3c9PQ'))
@@ -47,23 +55,29 @@ async function puppeteerScraper(assets: Asset[]): Promise<[boolean, ScrapError[]
       await page.setViewport({ width: 1080, height: 1024 })
       info.log(`💰 Scraping for the nominal price of '${requiredAsset.code}'`)
       try {
-        await page.waitForSelector('.lower-card-item-value')
+        await page.waitForSelector('.lower-card-item-value', { timeout: 10000 })
       } catch (error) {
         await page.waitForSelector('#maskNotFound', { timeout: 1000 })
         try {
           await page.goto(`${certificateOfReceivableBaseUrl}/${requiredAsset.code}/caracteristicas`)
-          await page.waitForSelector('.lower-card-item-value')
+          await page.waitForSelector('.lower-card-item-value', { timeout: 10000 })
         } catch (error) {
-          err.log(`Couldn't get the results for the asset '${requiredAsset.code}'. Make sure its code is correct`)
+          const message = `Couldn't get the results for the asset '${requiredAsset.code}'. Make sure its code is correct`
+          err.log(message)
           if (error instanceof Error) err.log(error.message)
           else err.log(error)
+          errors.push(new ScrapError(message, requiredAsset.code))
+          await page.screenshot({ path: `${requiredAsset.code}.png` })
           continue
         }
       }
     } catch (error) {
-      err.log(`Couldn't get the results for the asset '${requiredAsset.code}'. Make sure its code is correct`)
+      const message = `Couldn't get the results for the asset '${requiredAsset.code}'. Make sure its code is correct`
+      err.log(message)
       if (error instanceof Error) err.log(error.message)
       else err.log(error)
+      errors.push(new ScrapError(message, requiredAsset.code))
+      await page.screenshot({ path: `${requiredAsset.code}.png` })
       continue
     }
 
@@ -92,6 +106,7 @@ async function puppeteerScraper(assets: Asset[]): Promise<[boolean, ScrapError[]
           const message = `Unexpected nominal price for '${requiredAsset.code}'`
           err.log(message)
           errors.push(new ScrapError(message, requiredAsset.code))
+          await page.screenshot({ path: `${requiredAsset.code}.png` })
         }
         break
       }
@@ -100,6 +115,7 @@ async function puppeteerScraper(assets: Asset[]): Promise<[boolean, ScrapError[]
       const message = `Couldn't get PU PAR title in the page for '${requiredAsset.code}'`
       err.log(message)
       errors.push(new ScrapError(message, requiredAsset.code))
+      await page.screenshot({ path: 'error.png' })
     }
   }
   await browser.close()
