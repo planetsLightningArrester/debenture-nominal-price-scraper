@@ -34,4 +34,4 @@ jobs:
         if: ${{ failure() }}
         with:
           name: Errors
-          path: out/**/*.png
+          path: ./*.png
