@@ -10,7 +10,7 @@ on:
 jobs:
   daily_check:
     name: "🏊 Scrap data"
-    runs-on: self-hosted
+    runs-on: windows-latest
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
@@ -25,7 +25,9 @@ jobs:
 
       - name: 🔄 Run scraper
         run: |
-          npm run start -- -g '${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON_KEY }}'
+          $jsonContent='${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON_KEY }}'
+          Set-Content -Path "key.json" -Value $jsonContent -Encoding UTF8
+          npm run start -- -g "key.json"
 
       - uses: actions/upload-artifact@v4
         if: ${{ failure() }}

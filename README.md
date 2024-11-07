@@ -25,10 +25,10 @@ Once they're active, go back to your [Google Console](https://console.cloud.goog
 
 ## 📚 Usage
 
-Run `npm start` passing your Google Service Account JSON key stringified.
+Run `npm start` passing your Google Service Account JSON key file path.
 
 ```bash
-npm start -- --google '{"type": "service_account","project_id": ...'
+npm start -- --google key.json
 ```
 
 ## 🚀 Workflows

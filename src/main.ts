@@ -1,8 +1,9 @@
 import { program } from 'commander'
+import fs from 'fs'
 import { google } from 'googleapis'
-import { type Asset, info, warn, err } from './globals'
-import { updateAssets } from './scraper'
 import { DateTime } from 'luxon'
+import { type Asset, err, info, warn } from './globals'
+import { updateAssets } from './scraper'
 
 /** Spreadsheet with the data to update */
 const spreadsheetId = atob(atob('TVZkamQyTmpNREJmZVhnMFZVSmtUV2hWY0dabldVeHNkbEU1WHpOU05VUmpiMVJTVGxnNU1sRnBlbEU'))
@@ -19,13 +20,16 @@ async function main(): Promise<void> {
   program
     .name('debenture-nominal-price-scraper')
     .description("Scrap debenture's nominal price and update Google Spreadsheets")
-    .requiredOption('-g, --google <credential>', 'Google Service Account JSON key stringified')
+    .requiredOption('-g, --google <credential>', 'Full path to Google Service Account JSON key file')
     .parse()
 
-  const googleCredential: string = program.opts().google
+  const googleCredentialFullPath: string = program.opts().google
+  if (!fs.existsSync(googleCredentialFullPath)) {
+    throw new Error(`Credential path doesn't exist: ${googleCredentialFullPath}`)
+  }
 
   const auth = new google.auth.GoogleAuth({
-    credentials: JSON.parse(googleCredential),
+    credentials: JSON.parse(fs.readFileSync(googleCredentialFullPath, 'utf-8')),
     scopes: ['https://www.googleapis.com/auth/spreadsheets']
   })
 
