@@ -9,7 +9,7 @@ defaults:
 on:
   workflow_dispatch:
   schedule:
-    - cron: '* * * * 1,2,3,4,5'
+    - cron: '* 12-19 * * 1,2,3,4,5'
 jobs:
   daily_check:
     name: "🏊 Scrap data"
