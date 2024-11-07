@@ -36,7 +36,7 @@ async function puppeteerScraper(assets: Asset[]): Promise<[boolean, ScrapError[]
   }
   puppeteer.use(StealthPlugin() as PuppeteerExtraPlugin)
 
-  const browser = await puppeteer.launch()
+  const browser = await puppeteer.launch({ headless: false })
   const page = await browser.newPage()
 
   const debenturesBaseUrl = atob(atob('YUhSMGNITTZMeTlrWVhSaExtRnVZbWx0WVM1amIyMHVZbkl2WkdWaVpXNTBkWEpsY3c9PQ'))
