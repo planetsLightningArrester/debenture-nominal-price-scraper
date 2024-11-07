@@ -12,12 +12,12 @@ import { type Asset, err, info, ScrapError, warn } from './globals'
  * @returns whether any assets was updated
  */
 export async function updateAssets(assets: Asset[]): Promise<[Asset[], boolean, ScrapError[]]> {
-  const [gaxiosUpdatedData, errors] = await gaxiosScraper(assets)
-  if (errors.length === 0) {
-    return [assets, gaxiosUpdatedData, errors]
+  const [gaxiosUpdatedData, gaxiosErrors] = await gaxiosScraper(assets)
+  if (gaxiosErrors.length === 0) {
+    return [assets, gaxiosUpdatedData, gaxiosErrors]
   } else {
-    const parsedAssets = assets.filter(a => errors.find(e => e.assetCode !== a.code))
-    const toParseAssets = assets.filter(a => errors.find(e => e.assetCode === a.code))
+    const parsedAssets = assets.filter(a => gaxiosErrors.find(e => e.assetCode !== a.code))
+    const toParseAssets = assets.filter(a => gaxiosErrors.find(e => e.assetCode === a.code))
     const [puppeteerUpdatedData, errors] = await puppeteerScraper(toParseAssets)
     return [[...parsedAssets, ...toParseAssets], gaxiosUpdatedData || puppeteerUpdatedData, errors]
   }
