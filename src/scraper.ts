@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/strict-boolean-expressions */
 import { parseFromString } from 'dom-parser'
 import { request } from 'gaxios'
 import { DateTime } from 'luxon'
@@ -56,7 +55,7 @@ async function puppeteerScraper(assets: Asset[]): Promise<[boolean, ScrapError[]
       info.log(`💰 Scraping for the nominal price of '${requiredAsset.code}'`)
       try {
         await page.waitForSelector('.lower-card-item-value', { timeout: 10000 })
-      } catch (error) {
+      } catch (_) {
         await page.waitForSelector('#maskNotFound', { timeout: 1000 })
         try {
           await page.goto(`${certificateOfReceivableBaseUrl}/${requiredAsset.code}/caracteristicas`)

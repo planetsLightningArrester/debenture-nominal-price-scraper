@@ -13,6 +13,7 @@
     "caracteristicas",
     "gaxios",
     "luxon",
-    "printaeu"
+    "printaeu",
+    "tseslint"
   ]
 }

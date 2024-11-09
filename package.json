@@ -1,8 +1,7 @@
 {
   "name": "debenture-nominal-price-scraper",
   "displayName": "Debenture nominal price scraper",
-  "version": "0.0.2",
-  "description": "",
+  "version": "0.0.3",
   "main": "out/main.js",
   "scripts": {
     "start": "npm run clean && tsc && node out/main.js",
@@ -21,30 +20,25 @@
     "googleapis": "^144.0.0",
     "luxon": "^3.5.0",
     "printaeu": "^0.1.12",
-    "puppeteer": "^23.7.0",
+    "puppeteer": "^23.7.1",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.5.0",
     "@commitlint/config-conventional": "^19.5.0",
-    "@eslint/create-config": "^1.4.0",
-    "@eslint/eslintrc": "^3.1.0",
     "@eslint/js": "^9.14.0",
+    "@types/eslint__js": "^8.42.3",
     "@types/luxon": "^3.4.2",
     "@types/nodemailer": "^6.4.16",
-    "@typescript-eslint/eslint-plugin": "^6.21.0",
     "concurrently": "^9.1.0",
-    "eslint": "^8.57.1",
-    "eslint-config-standard-with-typescript": "^43.0.1",
-    "eslint-plugin-import": "^2.31.0",
-    "eslint-plugin-n": "^16.6.2",
-    "eslint-plugin-promise": "^6.6.0",
+    "eslint": "^9.14.0",
     "globals": "^15.12.0",
     "husky": "^9.1.6",
     "lint-staged": "^15.2.10",
     "rimraf": "^6.0.1",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.13.0"
   },
   "lint-staged": {
     "*.ts": [
