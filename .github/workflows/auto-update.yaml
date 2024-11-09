@@ -1,0 +1,136 @@
+name: 📡 Auto-update
+
+defaults:
+  run:
+    shell: bash
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 13 * * *'
+
+jobs:
+
+  # Test if we can update all dependencies
+  ci_check_latest_deps:
+    name: ⚗️ Test with latest dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🛠️ NodeJS setup
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 📡 Install latest dependencies
+        run: |
+          npm ci
+          ./scripts/force_update.sh
+
+  # Update either all the dependencies or only the parser
+  update_all_deps:
+    name: 📡 Update dependencies
+    needs: [ci_check_latest_deps]
+    if: ${{ always() && contains(needs.ci_check_latest_deps.result, 'success') }}
+    runs-on: ubuntu-latest
+    outputs:
+      RELEASE_VERSION: ${{ steps.push.outputs.RELEASE_VERSION }}
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🛠️ NodeJS setup
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 📡 Install latest dependencies
+        run: |
+          npm ci
+          ../scripts/force_update.sh
+
+      - name: 🤖 Update remote with changes
+        id: push
+        run: |
+
+          # Set bot
+          echo "[$(date +"%T")] [DEBUG] Setting bot";
+          git config --local user.email "github-actions[bot]@users.noreply.github.com";
+          git config --local user.name "github-actions[bot]";
+
+          # Check for changes
+          echo "[$(date +"%T")] [DEBUG] Checking for changes";
+          git add .;
+          status=$(git status);
+
+          if [[ $status =~ "Changes to be committed" ]]; then
+            echo "[$(date +"%T")] [DEBUG] New changes detected";
+
+            # Calculate new tag version
+            echo "[$(date +"%T")] [DEBUG] Calculating new version from the tag $(git describe --tags)";
+            last_version=$(git describe --tags | sed -r -n 's/v([[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+).*/\1/p');
+            minor="${last_version##*.}";
+            major="${last_version%.*}";
+            new_version="$major.$((minor + 1))";
+            echo "[$(date +"%T")] [DEBUG] New version - v$new_version";
+
+            # Update backend/package.json
+            echo "[$(date +"%T")] [DEBUG] Updating backend/package.json";
+            package_json_content=$(sed -r "s/$last_version/$new_version/" < backend/package.json);
+            echo "$package_json_content" > backend/package.json;
+            git diff backend/package.json;
+
+            # Update CHANGELOG.md
+            echo "[$(date +"%T")] [DEBUG] Updating CHANGELOG.md";
+            if grep -q "## \[$last_version\]" <CHANGELOG.md; then
+              last_but_one_release_line=$(grep -n -m 2 "## \[" <CHANGELOG.md | tail -n 1 | sed -r 's/([[:digit:]]*):.*/\1/g')
+              changelog_release_only_content=$(head -n $((last_but_one_release_line - 1)) CHANGELOG.md)
+              if [[ "${changelog_release_only_content}" =~ "### Changed" ]]; then
+                if [[ ! "${changelog_release_only_content}" =~ "- Update dependencies" ]]; then
+                  changelog_release_only_content=$(echo "${changelog_release_only_content}" | sed ':a;N;$!ba;s/\n/爨/g' | sed -r "s/### Changed爨+/### Changed爨爨- Update dependencies爨/" | sed 's/爨/\n/g')
+                fi
+              else
+                changelog_release_only_content="$(printf "%s\n\n%s\n\n%s" "${changelog_release_only_content}" "### Changed" "- Update dependencies")"
+              fi
+              changelog_content="$(printf "%s\n%s" "${changelog_release_only_content}" "$(tail -n +"$((last_but_one_release_line - 1))" CHANGELOG.md)")"
+              changelog_content=$(echo "${changelog_content}" | sed -r "s/## \[$last_version\].*/## \[$last_version\] - \[$new_version\] - $(date '+%Y-%m-%d')/")
+              echo "$changelog_content" >CHANGELOG.md
+            elif grep -q "## .* - \[$last_version\]" <CHANGELOG.md; then
+              changelog_content=$(sed -r "s/(## .* - )\[$last_version\]/\1\[$new_version\]/" <CHANGELOG.md)
+              echo "$changelog_content" >CHANGELOG.md
+            fi
+            git diff CHANGELOG.md;
+
+            # Submit the changes creating a new tag
+            echo "[$(date +"%T")] [DEBUG] Submitting changes";
+            git add .;
+            git commit -m "chore: update dependencies";
+            git tag "v$new_version";
+            git push -u origin main --tags;
+
+            # Set flag to trigger the release
+            echo "RELEASE_VERSION=v$new_version" >> $GITHUB_OUTPUT;
+
+          else
+            echo "[$(date +"%T")] [DEBUG] No changes detected";
+          fi
+
+          echo "[$(date +"%T")] [DEBUG] Done";
+
+  # Trigger the release if a version tag was submitted
+  # This is required because submits done by bot won't trigger workflows
+  make_release:
+    needs: update_all_deps
+    if: ${{ always() && needs.update_all_deps.outputs.RELEASE_VERSION }}
+    uses: ./.github/workflows/release.yaml
+    secrets: inherit
+    with:
+      release_version: ${{ needs.update_all_deps.outputs.RELEASE_VERSION }}
+
+# EOF

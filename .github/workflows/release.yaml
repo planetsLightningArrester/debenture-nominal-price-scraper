@@ -1,0 +1,73 @@
+name: 🎁 Create release
+
+
+on:
+
+  push:
+    tags:
+      - 'v*' # Push events matching v*, i.e. v1.0, v20.15.10
+
+  workflow_call:
+    inputs:
+      release_version:
+        type: string
+        description: 'Release version formatted as "vMM.mm.pp"'
+        required: true
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+
+  calculate-release-version:
+    name: 🧮 Calculate release version
+    runs-on: ubuntu-latest
+    outputs:
+      RELEASE_VERSION: ${{ steps.result.outputs.RELEASE_VERSION }}
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🧮 Calculate version
+        shell: bash
+        id: result
+        run: |
+          RELEASE_VERSION=${{ inputs.release_version }}
+          if [[ -n $RELEASE_VERSION ]] && [[ $RELEASE_VERSION =~ v[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+ ]]; then
+            echo "RELEASE_VERSION=$RELEASE_VERSION" >> $GITHUB_OUTPUT;
+          else
+            echo "[$(date +"%T")] [DEBUG] Calculating new version from the tag $(git describe --tags)";
+            RELEASE_VERSION=v$(git describe --tags | sed -r -n 's/v([[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+).*/\1/p');
+            echo "RELEASE_VERSION=$RELEASE_VERSION" >> $GITHUB_OUTPUT;
+          fi
+
+          echo "[INFO] Release version: $RELEASE_VERSION"
+
+  create-release:
+    name: 🎁 Create release
+    needs: calculate-release-version
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.calculate-release-version.outputs.RELEASE_VERSION }}
+
+      - name: 📰 Generate RELEASE.md
+        run: |
+          # Generate a RELEASE.md with only the first section of the CHANGELOG.md
+          line=$(cat CHANGELOG.md | grep -n -m 2 "## \[" | tail -n 1 | sed -r 's/([[:digit:]]*):.*/\1/g')
+          head -n $((line - 1)) CHANGELOG.md > RELEASE.md
+          echo "See the full [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)" >> RELEASE.md
+
+      - name: 🚀 Publish release
+        id: create_release
+        uses: ncipollo/release-action@v1.14.0
+        with:
+          tag: ${{ needs.calculate-release-version.outputs.RELEASE_VERSION }}
+          bodyFile: ./RELEASE.md
+
+# EOF
